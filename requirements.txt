@@ -22,10 +22,13 @@ google-api-core==2.24.2
 google-api-python-client==2.166.0
 google-auth==2.38.0
 google-auth-httplib2==0.2.0
+google-cloud-core==2.4.3
+google-cloud-translate==3.20.2
 google-generativeai==0.8.4
 googleapis-common-protos==1.69.2
 googletrans==4.0.0rc1
 greenlet==3.1.1
+grpc-google-iam-v1==0.14.2
 grpcio==1.72.0rc1
 grpcio-status==1.71.0
 h11==0.9.0
