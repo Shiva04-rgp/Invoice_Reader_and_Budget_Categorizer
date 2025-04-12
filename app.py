@@ -205,6 +205,7 @@ with left_column:
     - 📄 **Upload your invoice**
     - 🧠 **Enter your prompt**
     - 📊 **View categorized expenses and financial insights based on your prompts**
+    - - 💰 **view your financial health score**
     """)
 
     st_lottie(lottie_json_meter, height=200, key="meter_animation")
