@@ -123,18 +123,9 @@ lottie_json = load_lottie_file("asset/budget.json")
 lottie_json_how = load_lottie_file("asset/how.json")
 
 # Language options dictionary
-language_options = {
-    "en": "English",
-    "es": "Spanish",
-    "fr": "French",
-    "de": "German",
-    "it": "Italian",
-    "hi": "Hindi",
-    "ml": "Malayalam",
-    "ta": "Tamil",
-    "te": "Telugu",
-}
-
+language_options = ["English","Spanish","French","German","Italian","Hindi","Malayalam", "Tamil","Telugu"
+                      ]
+         
 st.markdown("""
     <style>
         @keyframes fadeInSlideUp {
@@ -203,10 +194,7 @@ with left_column:
 with right_column:
     
     # Language selection dropdown with full language names
-    language_option = st.selectbox("Select output language", list(language_options.values()))
-
-    # Get the corresponding language code for translation
-    selected_language_code = [code for code, name in language_options.items() if name == language_option][0]
+    selected_language_option = st.selectbox("Select output language", options=language_options)
 
     uploaded_file = st.file_uploader("📂 Upload your invoice (PDF only)", type=["pdf"])
     user_prompt = st.text_area("📝 Enter your custom prompt", placeholder="e.g. Analyze my expenses and summarize monthly spending trends. Show if expenses increased or decreased over time...")
@@ -230,7 +218,7 @@ with right_column:
                 analysis = analyze_invoice_data(invoice_text, user_prompt)
 
             # Translate the analysis output to the selected language
-            translated_analysis = translate_text(analysis, selected_language_code)
+            translated_analysis = translate_text(analysis, selected_language_option)
 
             st.markdown("<div class='section'>", unsafe_allow_html=True)
             st.markdown("<h3 class='section-header'>📊 Gemini Analysis</h3>", unsafe_allow_html=True)
