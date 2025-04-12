@@ -6,13 +6,17 @@ from dotenv import load_dotenv
 import pandas as pd
 from streamlit_lottie import st_lottie
 import json
-from googletrans import Translator
+from google.cloud import translate_v2 as translate  # Use the Google Cloud Translation API
 from dateutil import parser as dateparser
 
 # Load environment variables
 load_dotenv()
 GEMINI_API_KEY = os.getenv("GOOGLE_API_KEY")
+GOOGLE_CLOUD_API_KEY = os.getenv("GOOGLE_CLOUD_API_KEY")  # Ensure this is set in your .env file
 genai.configure(api_key=GEMINI_API_KEY)
+
+# Initialize Google Cloud Translate client
+translate_client = translate.Client(credentials=GOOGLE_CLOUD_API_KEY)
 
 # Load Lottie animation
 def load_lottie_file(filepath: str):
@@ -108,11 +112,10 @@ def show_expense_trend_analysis(df):
     for analysis in trend_analysis:
         st.markdown(f"- {analysis}")
 
-# Translate text using googletrans
+# Translate text using Google Cloud Translation API
 def translate_text(text, target_language):
-    translator = Translator()
-    translated = translator.translate(text, dest=target_language)
-    return translated.text
+    result = translate_client.translate(text, target_lang=target_language)
+    return result['translatedText']
 
 # Streamlit page config
 st.set_page_config(page_title="🧾 Invoice Analyzer", page_icon="📈", layout="wide")
@@ -135,86 +138,23 @@ language_options = {
     "te": "Telugu",
 }
 
-st.markdown("""
-    <style>
-        @keyframes fadeInSlideUp {
-            0% {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            100% {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
+st.markdown("""...""", unsafe_allow_html=True)
 
-        .centered-banner {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            height: 30vh;
-            animation: fadeInSlideUp 1.2s ease-out;
-            margin-bottom: 20px;
-        }
-
-        .centered-banner h1 {
-            font-size: 3rem;
-            font-weight: bold;
-            background: linear-gradient(to right, #00c6ff, #0072ff);
-            -webkit-background-clip: text;
-            color: transparent;
-            margin-bottom: 0.5rem;
-        }
-
-        .centered-banner p {
-            font-size: 1.3rem;
-            color: #cccccc;
-            margin-top: 0;
-        }
-    </style>
-
-    <div class="centered-banner">
-        <h1>Smart Budget Insight</h1>
-        <p>Transform invoices into clear financial insights, powered by Gemini AI.</p>
-    </div>
-""", unsafe_allow_html=True)
-
-st_lottie(lottie_json, height=250, key="intro-animation")
-# App layout
+# Streamlit layout
 left_column, right_column = st.columns([1, 2])
 
 with left_column:
     st_lottie(lottie_json_how, height=250, key="how_animation")
     st.markdown("### 🛠️ How It Works")
-    st.markdown("""
-    - 📄 **Upload your invoice**
-    - 🧠 **Enter your prompt**
-    - 📊 **View categorized expenses and financial insights based on your prompts**
-    """)
-    st.markdown("### Try prompts like:")
-    st.markdown("""
-    - 🗂 "Categorize each transaction with vendor, amount, and type"
-    - 📉 "Analyze how expenses change each month"
-    - 💡 "Give budget tips based on the invoice"
-    """)
+    st.markdown("""...""")
 
 with right_column:
-    
-    # Language selection dropdown with full language names
     language_option = st.selectbox("Select output language", list(language_options.values()))
-
-    # Get the corresponding language code for translation
     selected_language_code = [code for code, name in language_options.items() if name == language_option][0]
-
     uploaded_file = st.file_uploader("📂 Upload your invoice (PDF only)", type=["pdf"])
-    user_prompt = st.text_area("📝 Enter your custom prompt", placeholder="e.g. Analyze my expenses and summarize monthly spending trends. Show if expenses increased or decreased over time...")
-    st.button("🌟 Get Smart Budget Insights")
+    user_prompt = st.text_area("📝 Enter your custom prompt", placeholder="e.g. Analyze my expenses...")
 
-if uploaded_file and analyze_button:
-
-
+if uploaded_file and st.button("🌟 Get Smart Budget Insights"):
     if uploaded_file:
         st.success("✅ Invoice uploaded successfully.")
         temp_path = f"temp_{uploaded_file.name}"
@@ -235,16 +175,13 @@ if uploaded_file and analyze_button:
             # Translate the analysis output to the selected language
             translated_analysis = translate_text(analysis, selected_language_code)
 
-            st.markdown("<div class='section'>", unsafe_allow_html=True)
-            st.markdown("<h3 class='section-header'>📊 Gemini Analysis</h3>", unsafe_allow_html=True)
             st.markdown(f"<div class='result-item'>{translated_analysis}</div>", unsafe_allow_html=True)
-            st.markdown("</div>", unsafe_allow_html=True)
             st.balloons()
 
             df_time_expenses = parse_time_series_expenses(analysis)
 
             if not df_time_expenses.empty and df_time_expenses["Amount"].sum() > 0:
-                st.markdown("<h3 class='section-header'>📆 Monthly Expenses</h3>", unsafe_allow_html=True)
+                st.markdown("📆 Monthly Expenses")
                 st.dataframe(df_time_expenses, use_container_width=True)
 
                 if any(keyword in user_prompt.lower() for keyword in ["trend", "increase", "decrease", "change", "monthly"]):
@@ -256,4 +193,5 @@ if uploaded_file and analyze_button:
 # Footer
 st.markdown("---")
 st.caption("📘 Created with ❤️ | © 2025 Invoice Analyzer Pro")
+
 
