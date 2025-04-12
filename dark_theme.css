@@ -1,0 +1,105 @@
+/* Dark Theme Base */
+body {
+    background-color: #1e1e2f;
+    color: #ffffff;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+/* Custom Colorful Border for Uploaded File Section */
+.highlight {
+    border: 3px solid;
+    border-image: linear-gradient(45deg, #ff6ec4, #7873f5) 1;
+    padding: 15px;
+    border-radius: 15px;
+    background: #2a2a40;
+    text-align: center;
+    font-size: 1.1rem;
+    margin-bottom: 20px;
+}
+
+/* Section Headers */
+.section-header {
+    font-size: 1.8rem;
+    color: #00ffe7;
+    border-bottom: 2px solid #444;
+    margin-bottom: 10px;
+    padding-bottom: 5px;
+}
+
+/* Intro Title and Description */
+.intro {
+    text-align: center;
+    margin-top: -30px;
+    padding: 30px;
+}
+
+.animated-title {
+    font-size: 2.8rem;
+    background: linear-gradient(to right, #ff6ec4, #7873f5);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+    animation: fadeInDown 1.2s ease-out;
+}
+
+.animated-desc {
+    font-size: 1.2rem;
+    color: #ccc;
+    animation: fadeInUp 1s ease-out;
+}
+
+/* Upload spinner animation */
+.spinner {
+    border: 6px solid #f3f3f3;
+    border-top: 6px solid #00ffe7;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin: 20px auto;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-40px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(40px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Result Section Styling */
+.result-item {
+    background-color: #292b3e;
+    border: 2px dashed #5a5af1;
+    padding: 15px;
+    border-radius: 10px;
+    font-size: 1rem;
+    color: #f0f0f0;
+    margin-top: 10px;
+    white-space: pre-wrap;
+}
+
+/* Streamlit default overrides */
+section.main > div {
+    padding: 1.5rem;
+}
