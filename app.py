@@ -165,6 +165,7 @@ inject_custom_css()
 # Load Lottie animations
 lottie_json = load_lottie_file("asset/budget.json")
 lottie_json_how = load_lottie_file("asset/how.json")
+lottie_json_meter = load_lottie_file("asset/meter.json")
 
 # Header
 st.markdown(""" 
@@ -198,13 +199,15 @@ st_lottie(lottie_json, height=250, key="intro-animation")
 left_column, right_column = st.columns([1, 2])
 
 with left_column:
-    st_lottie(lottie_json_how, height=250, key="how_animation")
+    st_lottie(lottie_json_how, height=200, key="how_animation")
     st.markdown("### 🛠️ How It Works")
     st.markdown("""
     - 📄 **Upload your invoice**
     - 🧠 **Enter your prompt**
     - 📊 **View categorized expenses and financial insights based on your prompts**
     """)
+
+    st_lottie(lottie_json_meter, height=200, key="meter_animation")
 
     # Financial Health UI shown in left panel after file upload
     uploaded_file = st.session_state.get("uploaded_file")
@@ -265,4 +268,5 @@ with right_column:
 # Footer
 st.markdown("---")
 st.caption("📘 Created with ❤️ | © 2025 Invoice Analyzer Pro")
+
 
