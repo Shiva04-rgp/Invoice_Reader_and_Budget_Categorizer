@@ -6,3 +6,4 @@ pandas
 streamlit-lottie
 python-dateutil
 google-cloud
+reportlab
