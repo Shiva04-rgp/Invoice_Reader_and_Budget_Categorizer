@@ -7,6 +7,9 @@ import pandas as pd
 from streamlit_lottie import st_lottie
 import json
 from dateutil import parser as dateparser
+from io import BytesIO
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
 
 # Load environment variables
 load_dotenv()
@@ -158,6 +161,48 @@ def calculate_financial_health(invoice_text):
     return score, status, tip, explanation_message
 
 
+# Helper function to create the PDF content
+def generate_pdf(score, status, tip, explanation, analysis):
+    # Create a byte buffer to hold the PDF data
+    pdf_buffer = BytesIO()
+    
+    # Create a PDF object using reportlab
+    c = canvas.Canvas(pdf_buffer, pagesize=letter)
+    width, height = letter  # Default letter size
+    
+    # Set font
+    c.setFont("Helvetica", 12)
+
+    # Add content to the PDF
+    c.drawString(100, height - 40, f"📊 Financial Health Analysis")
+    c.drawString(100, height - 60, f"Score: {score}/100 - {status}")
+    c.drawString(100, height - 80, f"Tip: {tip}")
+
+    # Add Reason Behind Score
+    c.drawString(100, height - 120, f"📝 Reason Behind Your Score:")
+    text_object = c.beginText(100, height - 140)
+    text_object.setFont("Helvetica", 10)
+    for line in explanation.splitlines():
+        text_object.textLine(line)
+    c.drawText(text_object)
+
+    # Add Gemini AI Analysis
+    c.drawString(100, height - 220, f"📊 Gemini AI Analysis:")
+    text_object = c.beginText(100, height - 240)
+    for line in analysis.splitlines():
+        text_object.textLine(line)
+    c.drawText(text_object)
+    
+    # Finalize PDF and save it to buffer
+    c.showPage()
+    c.save()
+    
+    # Move buffer cursor to the beginning
+    pdf_buffer.seek(0)
+    
+    return pdf_buffer
+
+
 # Page config
 st.set_page_config(page_title="🧾 Invoice Analyzer", page_icon="📈", layout="wide")
 inject_custom_css()
@@ -199,16 +244,15 @@ st_lottie(lottie_json, height=250, key="intro-animation")
 left_column, right_column = st.columns([1, 2])
 
 with left_column:
-    st_lottie(lottie_json_how, height=200, key="how_animation")
+    st.lottie(lottie_json_how, height=200, key="how_animation")
     st.markdown("### 🛠️ How It Works")
-    st.markdown("""
+    st.markdown(""" 
     - 📄 **Upload your invoice**
     - 🧠 **Enter your prompt**
     - 📊 **View categorized expenses and financial insights based on your prompts**
-    - - 💰 **view your financial health score**
+    - 💰 **view your financial health score**
     """)
-
-    st_lottie(lottie_json_meter, height=200, key="meter_animation")
+    st.lottie(lottie_json_meter, height=200, key="meter_animation")
 
     # Financial Health UI shown in left panel after file upload
     uploaded_file = st.session_state.get("uploaded_file")
@@ -226,11 +270,16 @@ with left_column:
         st.markdown(explanation)
 
 
+# Define a flag to track if the analysis has been done
+if 'analysis_done' not in st.session_state:
+    st.session_state['analysis_done'] = False
 
+# Layout for right column (where file upload and user prompt are located)
+# Layout for right column (where file upload and user prompt are located)
 with right_column:
     uploaded_file = st.file_uploader("📂 Upload your invoice (PDF only)", type=["pdf"])
     user_prompt = st.text_area("📝 Enter your custom prompt", placeholder="e.g. Analyze my expenses and summarize monthly spending trends.")
-    st.button("🌟 Get Smart Budget Insights")
+    analyze_button = st.button("🌟 Get Smart Budget Insights")
 
     if uploaded_file:
         st.success("✅ Invoice uploaded successfully.")
@@ -249,25 +298,45 @@ with right_column:
         elif not user_prompt.strip():
             st.warning("⚠ Please enter a prompt to analyze the invoice.")
         else:
-            with st.spinner("🤖 Analyzing with Gemini AI..."):
-                analysis = analyze_invoice_data(invoice_text, user_prompt)
+            # Only analyze if the analysis hasn't been done yet
+            if analyze_button and not st.session_state['analysis_done']:
+                with st.spinner("🤖 Analyzing with Gemini AI..."):
+                    analysis = analyze_invoice_data(invoice_text, user_prompt)
 
-            st.markdown("<div class='section'>", unsafe_allow_html=True)
-            st.markdown("<h3 class='section-header'>📊 Gemini Analysis</h3>", unsafe_allow_html=True)
-            st.markdown(f"<div class='result-item'>{analysis}</div>", unsafe_allow_html=True)
-            st.markdown("</div>", unsafe_allow_html=True)
-            st.balloons()
+                st.session_state['analysis'] = analysis
+                st.session_state['analysis_done'] = True
 
-            df_time_expenses = parse_time_series_expenses(analysis)
-            if not df_time_expenses.empty and df_time_expenses["Amount"].sum() > 0:
-                st.markdown("<h3 class='section-header'>📆 Monthly Expenses</h3>", unsafe_allow_html=True)
-                st.dataframe(df_time_expenses, use_container_width=True)
-                show_expense_trend_analysis(df_time_expenses)
+                # Generate the financial health score and other data
+                score, status, tip, explanation = calculate_financial_health(invoice_text)
+                st.session_state['score'] = score
+                st.session_state['status'] = status
+                st.session_state['tip'] = tip
+                st.session_state['explanation'] = explanation
 
-        os.remove(temp_path)
+                st.markdown("<div class='section'>", unsafe_allow_html=True)
+                st.markdown("<h3 class='section-header'>📊 Gemini Analysis</h3>", unsafe_allow_html=True)
+                st.markdown(f"<div class='result-item'>{analysis}</div>", unsafe_allow_html=True)
+                st.markdown("</div>", unsafe_allow_html=True)
+                st.balloons()
 
-# Footer
-st.markdown("---")
-st.caption("📘 Created with ❤️ | © 2025 Invoice Analyzer Pro")
 
+    # Generate PDF only after analysis is done
+    if st.session_state.get('analysis_done', False):
+        # Generate PDF
+        pdf_buffer = generate_pdf(
+            st.session_state['score'],
+            st.session_state['status'],
+            st.session_state['tip'],
+            st.session_state['explanation'],
+            st.session_state['analysis'],
+            
+        )
+
+        # Add a download button
+        st.download_button(
+            label="📥 Download Financial Health Report",
+            data=pdf_buffer,
+            file_name="financial_health_report.pdf",
+            mime="application/pdf"
+        )
 
